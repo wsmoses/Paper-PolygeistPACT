@@ -1,0 +1,59 @@
+\begin{table}
+{
+%\caption{Geometric mean and standard deviation execution time of programs produced by \tool and Pluto on Polybench EXTRALARGE double-precision single-thread. The rightmost column shows the percent difference between \tool and Pluto runtimes with same exclusion rule as Table~\ref{table::clang_and_our_tool}. Pluto cannot compile the \icode{adi} benchmark.}
+\caption{GeoMean and StdDev of program runtime with \tool and Pluto on Polybench.}
+\label{table::polymer}
+
+\footnotesize
+\centering
+\begin{tabular}{p{1.1cm}rp{0.01cm}rrp{0.01cm}rr}
+    \toprule
+Benchmark   & Pluto &$\pm$&$\sigma$   & \tool &$\pm$&$\sigma$ & \%-diff  \\ \midrule\rowcolor{aluminium1}
+2mm           & 4.471  & $\pm$ & 0.017 & 4.258  & $\pm$ & 0.018 & 4.765\% \\
+3mm           & 8.757  & $\pm$ & 0.026 & 7.731  & $\pm$ & 0.003 & 11.724\% \\
+\rowcolor{aluminium1}
+adi           & \multicolumn{7}{c}{Pluto fails to compile} \\
+atax          & 0.011  & $\pm$ & 0.002 & 0.011  & $\pm$ & 0.001 & EXCL      \\
+\rowcolor{aluminium1}
+bicg          & 0.010  & $\pm$ & 0.001 & 0.006  & $\pm$ &<0.001 & EXCL      \\
+cholesky      & 10.775 & $\pm$ & 0.056 & 11.285 & $\pm$ & 0.097 & -4.731\%  \\
+\rowcolor{aluminium1}
+correlation   & 4.153  & $\pm$ & 0.019 & 4.228  & $\pm$ & 0.003 & -1.822\%  \\
+covariance    & 4.111  & $\pm$ & 0.018 & 4.253  & $\pm$ & 0.004 & -3.452\%  \\
+\rowcolor{aluminium1}
+deriche       & 1.771  & $\pm$ & 0.001 & 1.762  & $\pm$ & 0.001 & 0.571\%   \\
+doitgen       & 1.869  & $\pm$ & 0.021 & 1.417  & $\pm$ & 0.010 & 24.192\%  \\
+\rowcolor{aluminium1}
+durbin        & 0.017  & $\pm$ & 0.005 & 0.015  & $\pm$ &<0.001 & EXCL      \\
+fdtd-2d       & 21.717 & $\pm$ & 0.205 & 15.930 & $\pm$ & 0.073 & 26.627\%  \\
+\rowcolor{aluminium1}
+floyd-w.      & 380.402& $\pm$ & 0.694 & 345.460& $\pm$ & 0.569 & 9.186\%   \\
+gemm          & 4.591  & $\pm$ & 0.036 & 5.110  & $\pm$ & 0.006 & -11.306\% \\
+\rowcolor{aluminium1}
+gemver        & 0.099  & $\pm$ & 0.001 & 0.097  & $\pm$ &<0.001 & 2.356\%   \\
+gesummv       & 0.035  & $\pm$ & 0.001 & 0.014  & $\pm$ &<0.001 & EXCL      \\
+\rowcolor{aluminium1}
+gramschm.     & 14.647 & $\pm$ & 0.172 & 14.730 & $\pm$ & 0.171 & -0.569\%  \\
+heat-3d       & 28.723 & $\pm$ & 0.037 & 29.752 & $\pm$ & 0.033 & -3.581\%  \\
+\rowcolor{aluminium1}
+jacobi-1d     & 0.008  & $\pm$ & 0.003 & 0.010  & $\pm$ & 0.002 & EXCL      \\
+jacobi-2d     & 17.322 & $\pm$ & 0.077 & 22.616 & $\pm$ & 0.217 & -30.561\% \\
+\rowcolor{aluminium1}
+lu            & 10.667 & $\pm$ & 0.034 & 10.274 & $\pm$ & 0.049 & 3.689\%   \\
+ludcmp        & 98.916 & $\pm$ & 0.249 & 98.803 & $\pm$ & 0.716 & 0.114\%   \\
+\rowcolor{aluminium1}
+mvt           & 0.084  & $\pm$ & 0.001 & 0.083  & $\pm$ &<0.001 & 0.196\%   \\
+nussinov      & 124.424& $\pm$ & 0.122 & 124.062& $\pm$ & 0.147 & 0.291\%   \\
+\rowcolor{aluminium1}
+seidel-2d     & 237.186& $\pm$ & 0.028 & 164.344& $\pm$ & 0.003 & 30.711\%  \\
+symm          & 53.952 & $\pm$ & 0.037 & 53.921 & $\pm$ & 0.086 & 0.058\%   \\
+\rowcolor{aluminium1}
+syr2k         & 9.946  & $\pm$ & 0.008 & 10.006 & $\pm$ & 0.008 & -0.605\%  \\
+syrk          & 5.374  & $\pm$ & 0.005 & 5.328  & $\pm$ & 0.003 & 0.855\%   \\
+\rowcolor{aluminium1}
+trisolv       & 0.024  & $\pm$ &<0.001 & 0.024  & $\pm$ &<0.001 & EXCL      \\
+trmm          & 2.079  & $\pm$ & 0.025 & 2.215  & $\pm$ & 0.001 & -6.550\%  \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

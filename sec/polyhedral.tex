@@ -1,0 +1,169 @@
+\subsection{Connecting MLIR to Polyhedral Tools}
+\label{sec:polyhedral_tools}
+
+Regions of the input program expressed using MLIR Affine dialect are amenable to the polyhedral model. Existing tools, however, cannot directly consume MLIR. We chose to implement a bi-directional conversion to and from OpenScop~\cite{openscop}, an exchange format readily consumable by numerous polyhedral tools, including Pluto~\cite{Bondhugula2008Pluto}, and further convertible to \icode{isl}~\cite{isl} representation. This allows \tool to seamlessly connect with tools created in polyhedral compilation research without having to amend those tools to support MLIR.
+
+Most polyhedral tools are designed to operate on C or \textsc{Fortran} inputs build around \emph{statements}, which do not have a direct equivalent in MLIR. Therefore, we design a mechanism to create statement-like structure from chains of MLIR operations. We further demonstrate that this gives \tool an ability to favorably affect the behavior of the polyhedral scheduler by controlling statement granularity (Section~\ref{sec:stmt_splitting}).
+
+\subheading{Simple Statement Formation}\label{sec:stmt_formation}
+Observing that C statements amenable to the polyhedral model are (mostly) variable assignments, we can derive a mechanism to identify statements from chains of MLIR operations. A \icode{store} into memory is the last operation of the statement.
+The backward slice of this operation, i.e., the operations transitively computing its operands, belong to the statement. The slice extension stops at operations producing a value categorized as affine dimension or symbol, directly usable in affine expressions. Such values are loop induction variables or loop-invariant constants.
+
+Some operations may end up in multiple statements if the value is used more than once. However, we need the mapping between operations and statements to be bidirectional in order to emit MLIR after the scheduler has restructured the program without considering SSA value visibility rules. If an operation with multiple uses is side effect free, \tool simply duplicates it. For operations whose duplication is illegal, \tool stores their results in stack-allocated \memref's and replaces all further uses with memory loads. Figure~\ref{fig:scratchpad} illustrates the transformation for value \icode{\%0} used in operation \icode{\%20}. This creates a new statement.
+
+\subheading{Region-Spanning Dependencies}
+
+In some cases, a statement may consist of MLIR operations across different (nested) loops, e.g., a load from memory into an SSA register happens in an outer loop while it is used in inner loops. The location of such a statement in the loop hierarchy is unclear. More importantly, it cannot be communicated to the polyhedral scheduler. \tool resolves this by storing the value in a stack-allocated \icode{memref} in the defining region and loading it back in the user regions. Figure~\ref{fig:scratchpad} illustrates this transformation for value \icode{\%0} used in operation \icode{\%10}. Similarly to the basic case, this creates a new statement in the outer loop that can be scheduled independently.
+
+This approach can be seen as a reg2mem conversion, the inverse of mem2reg performed in the frontend. It only applies to a subset of values, and may be undone after polyhedral scheduling has completed. Furthermore, to decrease the number of dependencies and memory footprint, \tool performs a simple value analysis and avoids creating stack-allocated buffers if the same value is already available in another memory location and can be read from there.
+\wmnote{for now just removed the nuanced mem2reg description (in comment here).}
+% Even though this can be thought as a pass which ``undoes''
+% .\lc{I would remove this last sentence.} 
+
+%While it is possible to instead make frontend mem2reg less aggressive, it would lead to more statements and associated dependencies that negatively affect the performance of the polyhedral scheduler.\wmnote{this is confusing}
+
+\begin{figure}
+\centering
+{\scriptsize
+\begin{lstlisting}[language=llvm, escapeinside=**, mathescape=true]
+affine.for %i = ...
+  %0 = affine.load %A[%i]
+  affine.store %other, %A[%i] // motion-barrier
+  affine.for %j = ... {
+    %1 = affine.load %B[%j]
+    %10 = mulf %0, %1 : f64   // use-1
+    store %10, %res[%i, %j]
+  %20 = addf %0, %0 : f64     // use-2
+\end{lstlisting}}
+$\Downarrow$
+{\scriptsize
+\begin{lstlisting}[language=llvm, escapeinside=**, mathescape=true]
+%tmp = memref.alloca() : memref<1xf64>
+affine.for %i = ...
+  %0 = affine.load %A[%i]
+  affine.store %0, %tmp[0]    // store to scratchpad
+  affine.store %other, %A[%i] // motion-barrier
+  affine.for %j = ...
+    %1 = affine.load %B[%j]
+    %2 = affine.load %tmp[0]  // load back for use-1
+    %10 = mulf %2, %1 : f64   // use-1 (%2 instead of %0)
+    affine.store %10, %res[%i, %j]
+  %19 = affine.load %tmp[0]   // load back for use-2
+  %20 = addf %19, %19 : f64   // use-2 (%19 instead of %0)
+  // ...
+\end{lstlisting}
+}
+\caption{\tool breaks region-spanning use-def chains and handles multi-use values by introducing scratchpad storage when operation duplication is illegal. In absence of \icode{motion-barrier} statement, the \icode{\%0} load would be duplicated and sunk. Pseudo-MLIR with types and braces omitted for brevity.}
+\label{fig:scratchpad}
+\end{figure}
+
+\begin{figure}
+{\scriptsize
+\begin{lstlisting}[language=llvm, escapeinside=**, mathescape=true]
+func @S1(%A: memref<?xf64>, %tmp: memref<1xf64>,
+         %i: index)
+  %0 = affine.load %A[%i]
+  affine.store %0, %tmp[0]   // store to scratchpad
+
+func @S2(%A: memref<?xf64>, %other: f64, %i: index)
+  affine.store %other, %A[%i]
+
+func @S3(%B: memref<?x?xf64>, %tmp: memref<1xf64>,
+         %res: memref<?x?xf64>, %i: index, %j: index)
+  %1 = affine.load %B[%k, %j]
+  %2 = affine.load %tmp[0]   // load back for use-1
+  %10 = mulf %2, %1 : f64    // use-1
+  affine.store %10, %res[%i, %j]
+
+func @S4(%tmp: memref<1xf64>, ...)
+  %19 = affine.load %tmp[0]  // load back for use-2
+  %20 = addf %19, %19 : f64  // use-2
+  // ...
+
+%tmp = memref.alloca() : memref<1xf64>
+affine.for %i = ...
+  call @S1(%A, %tmp, %i)
+  call @S2(%A, %other, %i)
+  affine.for %j = ...
+    call @S3(%B, %tmp, %res, %i, %j)
+  call @S4(%tmp)
+\end{lstlisting}
+}
+\caption{Outlining makes polyhedral ``statements'' visible in code from Fig.~\ref{fig:scratchpad}.}
+\label{fig:outlining}
+\end{figure}
+
+\subheading{\scop Formation}
+
+To define a \scop, we outline individual statements into functions so that they can be represented as opaque calls with known memory footprints, similarly to Pencil~\cite{pencil}.
+This process also makes the inter-statement SSA dependencies clear. These dependencies exist between calls that \emph{use} the same SSA value, but there are no values defined by these calls. We lift all local stack allocations and place them at the entry block of the surrounding function in order to keep them visible after loop restructuring. Figure~\ref{fig:outlining} demonstrates the resulting IR.
+
+The remaining components of the polyhedral representation are derived as follows:
+the domain of the statement is defined to be the iteration space of its enclosing loops, constrained by their respective lower and upper bounds, and intersected with any ``if'' conditions. This process leverages the fact that MLIR expresses bounds and conditions directly as affine constructs.
+The access relations for each statement are obtained as unions of affine maps of the \icode{affine.load} (read) and \icode{affine.store} (must-write) operations, with RHS of the relation annotated by an ``array'' that corresponds to the SSA value of the accessed \memref.
+Initial schedules are assigned using the $(2d+1)$ formalism, with odd dimensions representing the lexical order of loops in the input program and even dimensions being equal to loop induction variables.
+Affine constructs in OpenScop are represented as lists of linear equality ($=0$) or inequality ($\geq 0$) coefficients, which matches exactly the internal representation in MLIR, making the conversion straightforward.
+
+
+\subheading{Code Generation Back to MLIR}
+
+The Pluto scheduler produces new schedules in OpenScop as a result. Generating loop structure back from affine schedules is a solved, albeit daunting, problem~\cite{cloog,grosser2015polyhedral}. \tool relies on CLooG~\cite{cloog} to generate an initial loop-level AST, which it then converts to Affine dialect loops and conditionals. There is no need to simplify affine expressions at code generation since MLIR accepts them directly and can simplify them at a later stage. Statements are introduced as function calls with rewritten operands and then inlined.
+
+\subsection{Controlling Statement Granularity}\label{sec:stmt_splitting}
+
+Recall that \tool reconstructs ``statements'' from sequences of primitive operations (Section~\ref{sec:polyhedral_tools}). We initially designed an approach that recovers the statement structure similar to that in the C input, but this is not a requirement. Instead, statements can be formed from any subsets of MLIR operations as long as they can be organized into loops and sorted topologically (i.e., there are no use-def cycles between statements). To expose the dependencies between such statements to the affine scheduler, we reuse the idea of going through scratchpad memory: each statement writes the values required by other statements to dedicated memory locations, and the following statements read from those. The scratchpads are subject to partial array expansion~\cite{array_expansion} to minimize their effect on the affine scheduler as single-element scratchpad arrays create artificial scalar dependencies.
+%\az{discuss the potential of considering such dependencies differently in the scheduler or using live-range reordering, but this is out of scope because requires to change the scheduler.}
+This change in \emph{statement granularity} gives the affine scheduler unprecedented flexibility allowing it to chose different schedules for different \emph{parts} of the same C statement.
+
+\begin{figure}
+  %\centering
+  {\scriptsize
+  \begin{lstlisting}[language=c]
+for(i=0; i<NI; i++)
+  for(j=0; j<NJ; j++)
+    for(k=0; k<NK; k++)
+S:    A[i][j]+=f(B[k][i],C[k][j]);
+  \end{lstlisting}
+  }\vspace{-0.5em}\par
+  \hspace{0.25\linewidth}$\Downarrow$\vspace{0.5em}\par
+  \begin{tabular}{@{\hspace{-\parindent}}l@{\hspace{-1em}$\Rightarrow$}l}
+  {\scriptsize
+  \begin{lstlisting}[language=c]
+for(i=0; i<NI; i++)
+  for(j=0; j<NJ; j++)
+    double M[NK];
+    for(k=0; k<NK; k++)
+S:    M[k]=f(B[k][i],C[k][j]);
+T:    A[i][j] += M[k];
+  \end{lstlisting}
+  }
+  &
+  {\scriptsize
+  \begin{lstlisting}[language=c]
+double M[NK];
+for(k=0; k<NK; k++)
+  for(i=0; i<NI; i++)
+    for(j=0; j<NJ; j++)
+ S:   M[k]=f(B[k][i],C[k][j]);
+ T:   A[i][j] += M[k];
+  \end{lstlisting}
+  }
+  \end{tabular}
+  \caption{Splitting a nested reduction statement (top) into a fully parallel compute statement and a trivial reduction statement (bottom left) makes Pluto generate different schedules (bottom right). Further scratchpad array expansion may enable loop fission and give scheduler even more liberty.}
+  \label{fig:splitting_example}
+\end{figure}
+
+Consider, for example, the statement \icode{S} in Figure~\ref{fig:splitting_example}(top) surrounded by three loops iterating over \icode{i}, \icode{j} and \icode{k}. Such contraction patterns are common in computational programs (this particular example can be found in the \icode{correlation} benchmark with \icode{B}$\equiv$\icode{C}, see Section~\ref{sec:splitcase}). The loop order that best exploits the locality is (\icode{k}, \icode{i}, \icode{j}), which results in temporal locality for reads from \icode{B} (the value is reused in all iterations of the now-innermost \icode{j} loop) and in spatial locality for reads from \icode{C} (consecutive values are read by consecutive iterations, increasing the likelihood of L1 cache hits). Yet, Pluto never proposes such an order because of a reduction dependency along the \icode{k} dimension due to repeated read/write access to \icode{A[i][j]} as Pluto tends to pick loops with fewer dependencies as outermost.
+%\az{practically, in minimizes the upper bound of the dependence distance, which is never 0 along k because of the reduction, but can be zero along i and j here. Not sure if we want to go into such details.}
+While the dependency itself is inevitable, it can be moved into a separate statement \icode{T} in Figure~\ref{fig:splitting_example}(bottom left). This approach provides scheduler with more freedom of choice for the first statement at a lesser memory cost than expanding the entire \icode{A} array. It also factors out the reduction into a ``canonical'' statement that is easier to process for the downstream passes, e.g., vectorization.
+
+Implementing this transformation at the C level would require manipulating C AST and reasoning about C (or even C++) semantics. This is typically out of reach for source-to-source polyhedral optimizers such as Pluto that treat statements as black boxes. While it is possible to implement this transformation at the LLVM IR level, e.g., in Polly, where statements are also reconstructed and injection of temporary allocations is easy, the heuristic driving the transformation is based on the loop structure and multi-dimensional access patterns which are difficult to recover at such a low level~\cite{delinearization}.
+
+The space of potential splittings is huge---each MLIR operation can potentially become a statement. Therefore, we devise a heuristic to address the contraction cases similar to Figure~\ref{fig:splitting_example}. Reduction statement splitting applies to statements:
+\begin{itemize}
+  \item surrounded by at least 3 loops;
+  \item with LHS$\neq$RHS, and using all loops but the innermost;
+  \item with two or more different access patterns on the RHS.
+\end{itemize}
+This covers statements that could have locality improved by a different loop order and with low risk of undesired fission.
+This heuristic merely serves as an illustration of the kind of new transformations \tool can enable.

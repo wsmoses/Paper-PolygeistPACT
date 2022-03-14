@@ -1,0 +1,169 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{xargs}
+\usepackage{listings}
+\usepackage{minted}
+\usepackage[outline]{contour}% http://ctan.org/pkg/contour
+\usepackage{xspace}
+\usepackage{amsmath}
+\usepackage{color, colortbl}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\usetikzlibrary{patterns}
+
+\newif\iffinalversion
+% Uncomment me for the final version.
+\finalversiontrue
+
+\iffinalversion
+\usepackage[disable]{todonotes}
+
+\renewcommand{\todo}[2]{}
+\newcommandx{\wmnote}[1]{}
+\newcommandx{\az}[1]{}
+\newcommandx{\rz}[1]{}
+\newcommandx{\lc}[1]{}
+\newcommandx{\red}[1]{#1}
+\else
+\usepackage[textsize=scriptsize,textwidth=1.5in]{todonotes}
+
+\addtolength{\marginparwidth}{1.2in}
+\addtolength{\hoffset}{1.0in}
+\addtolength{\paperwidth}{2.4in}
+
+\newcommandx{\az}[2][1=]{\todo[linecolor=yellow,backgroundcolor=yellow!25,bordercolor=yellow,#1]{\textbf{Alex:} #2}}
+\newcommandx{\wmnote}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{\textbf{Billy:} #2}}
+\newcommandx{\rz}[2][1=]{\todo[linecolor=green,backgroundcolor=green!25,bordercolor=green,#1]{\textbf{Ruizhe:} #2}}
+\newcommandx{\lc}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{\textbf{Lorenzo:} #2}}
+\newcommand{\red}[1]{{\color{red} #1}}
+\fi
+
+
+\newcommand{\icode}[1]{{\texttt{#1}}}
+\newcommand{\tool}{Polygeist\xspace}
+\newcommand{\memref}{\icode{memref}\xspace}
+\newcommand{\scop}{SCoP\xspace}
+\newcommand{\polycc}{\icode{polycc}\xspace}
+
+\tikzset{
+  cfedge/.style={
+    font=\itshape,
+    draw=black,
+    ->,
+    >=stealth'
+  },
+  process/.style={
+    draw,
+    fill=orange!50,
+    rectangle,
+    minimum height=1.5em,
+    minimum width=6em,
+    align=center,
+    font=\small,
+  }
+}
+
+%\newcommand{\subheading}[1]{\vspace{0.3em}\noindent\textbf{\textit{#1:}}}
+\newcommand{\subheading}[1]{\paragraph{#1}}
+\newcommand{\midsepremove}{\aboverulesep = 0mm \belowrulesep = 0mm}
+%\definecolor{orange3}{rgb}{0.808,0.361,0.000}
+\definecolor{orange3}{rgb}{0.425,0.191,0.000}
+\definecolor{scarletred3}{rgb}{0.643,0.000,0.000}
+\definecolor{green3}{rgb}{0.000,0.405,0.000}
+\definecolor{blue3}{rgb}{0.000,0.000,0.704}
+\definecolor{aluminium1}{rgb}{0.933,0.933,0.925}
+\definecolor{aluminium2}{rgb}{0.827,0.843,0.812}
+\definecolor{aluminium3}{rgb}{0.729,0.741,0.714}
+\definecolor{aluminium4}{rgb}{0.533,0.541,0.522}
+\definecolor{aluminium5}{rgb}{0.333,0.341,0.325}
+\definecolor{aluminium6}{rgb}{0.180,0.204,0.212}
+
+\lstset{basicstyle=\ttfamily}
+
+\lstdefinelanguage{llvm}{
+	% see https://tex.stackexchange.com/questions/137237/listings-text-highlighting-based-on-prefix
+    %moredelim=[s][\color{orange3}]{x}{>},
+    alsoletter={\%,\#,!},
+    keywordsprefix={\%},
+    morekeywords={\%},
+    keywordstyle=\color{orange3},
+    commentstyle=\color{aluminium4},
+    % this allows to color inside <memrefxf32> (i.e., f32).
+    otherkeywords={index, f32, i32, f64, i8},
+    keywords=[3]{index, f32, memref, i32, f64, i8, affine_map, affine_set, iter_args},
+    keywordstyle=[3]\color{scarletred3},
+    keywords=[4]{affine},
+    keywordstyle=[4]\color{aluminium6},
+    showstringspaces=false,
+	breaklines=true,
+    breakatwhitespace=true,
+    morestring=[b]",
+    stringstyle=\color{green3},
+    moredelim=[s][\color{blue3}]{\#}{<},
+    moredelim=[s][\color{scarletred3}]{!}{\ },
+    morecomment=[l]{//},
+}
+
+
+%\title{Affine C in MLIR}
+%\title{Polygeist: Revisiting Polyhedral Compilation in MLIR}
+\title{Polygeist: Raising C to Polyhedral MLIR}
+\author{
+\IEEEauthorblockN{William S. Moses\IEEEauthorrefmark{1}}
+\IEEEauthorblockA{
+\textit{MIT CSAIL}\\
+Cambridge, MA, USA\\
+wmoses@mit.edu}
+\and
+\IEEEauthorblockN{Lorenzo Chelini\IEEEauthorrefmark{1}}
+\IEEEauthorblockA{
+\textit{TU Eindhoven}\\
+Eindhoven, The Netherlands\\
+l.chelini@tue.nl}
+\and
+\IEEEauthorblockN{Ruizhe Zhao\IEEEauthorrefmark{1}}
+\IEEEauthorblockA{
+\textit{Imperial College London}\\
+London, UK\\
+ruizhe.zhao15@imperial.ac.uk}
+\and
+\IEEEauthorblockN{Oleksandr Zinenko}
+\IEEEauthorblockA{
+\textit{Google Inc.}\\
+Paris, France\\
+zinenko@google.com}
+\thanks{\IEEEauthorrefmark{1} Equal contribution.}
+}
+
+\input{data}
+
+\begin{document}
+
+\maketitle
+
+% IMPORTANT: no LaTex commands in the abstract!
+\begin{abstract}
+We present Polygeist, a new compilation flow that connects the MLIR compiler infrastructure to cutting edge polyhedral optimization tools. It consists of a C and C++ frontend capable of converting a broad range of existing codes into MLIR suitable for polyhedral transformation and a bi-directional conversion between MLIR and OpenScop exchange format. The Polygeist/MLIR intermediate representation featuring high-level (affine) loop constructs and n-D arrays embedded into a single static assignment (SSA) substrate enables an unprecedented combination of SSA-based and polyhedral optimizations. We illustrate this by proposing and implementing two extra transformations: statement splitting and reduction parallelization. Our evaluation demonstrates that Polygeist outperforms on average both an LLVM~IR-level optimizer (Polly) and a source-to-source state-of-the-art polyhedral compiler (Pluto) when exercised on the Polybench/C benchmark suite in sequential (2.53x vs 1.41x, 2.34x) and parallel mode (9.47x vs 3.26x, 7.54x) thanks to the new representation and transformations.
+\end{abstract}
+
+\input{sec/intro}
+\input{sec/background}
+\input{sec/frontend}
+\input{sec/polyhedral}
+\input{sec/opt}
+\input{sec/eval}
+\input{sec/related}
+\input{sec/discussion}
+\input{sec/conclusion}
+\input{sec/ack}
+
+\input{artifact}
+
+\bibliographystyle{IEEEtran}
+\bibliography{bibliography}
+
+\end{document}

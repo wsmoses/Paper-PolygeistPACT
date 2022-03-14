@@ -1,0 +1,157 @@
+
+\appendix
+In this artifact appendix, we describe how to build Polygeist and evaluate its performance (as well as baseline compilers) on the Polybench benchmark suite. We provide two mechanisms for artifact evaluation: a Docker container\footnote{Script available here: \url{https://github.com/wsmoses/Polygeist-Script/blob/main/Dockerfile}}, and a command-by-command description of the installation process, along with comments regarding how this may need to be modified to run on a system with hardware or software configuration that is distinct from what we used. As expected, the command description mirrors much of the content of the docker file. While a docker file is certainly more convenient and a good way of getting the compiler set up, similar changes to expectations of how many cores the system has in the evaluation will be required even with Docker.
+
+To compile Polygeist, one must first compile several of its dependencies. We ran our experiments on an AWS c5.metal instance based on Ubuntu 20.04. We've tailored our build instructions to such a system. While many of the instructions are general and independent of machine, or OS, some steps may not be (and we describe what locations they may occur below).
+
+\begin{small}
+\begin{verbatim}
+$ sudo apt update
+$ sudo apt install apt-utils
+$ sudo apt install tzdata build-essential \
+  libtool autoconf pkg-config flex bison \
+  libgmp-dev clang-9 libclang-9-dev texinfo \
+  cmake ninja-build git texlive-full numactl
+# Change default compilers to make Pluto happy
+$ sudo update-alternatives --install \
+  /usr/bin/llvm-config llvm-config \
+  /usr/bin/llvm-config-9 100
+$ sudo update-alternatives --install \
+  /usr/bin/FileCheck FileCheck-9 \
+  /usr/bin/FileCheck 100
+$ sudo update-alternatives --install \
+  /usr/bin/clang clang \
+  /usr/bin/clang-9 100
+$ sudo update-alternatives --install \
+  /usr/bin/clang++ clang++ \
+  /usr/bin/clang++-9 100
+\end{verbatim}
+\end{small}
+
+\noindent To begin, let us download a utility repository, which will contain several scripts and other files useful for compilation and benchmarking:
+
+\begin{small}
+\begin{verbatim}
+$ cd 
+$ git clone \
+  https://github.com/wsmoses/Polygeist-Script\
+  scripts
+\end{verbatim}
+\end{small}
+
+\noindent One can now compile and build Pluto as shown below:
+
+\begin{small}
+\begin{verbatim}
+$ cd 
+$ git clone \
+  https://github.com/bondhugula/pluto
+$ cd pluto/
+$ git checkout e5a039096547e0a3d34686295c
+$ git submodule init
+$ git submodule update
+$ ./autogen.sh
+$ ./configure
+$ make -j`nproc`
+\end{verbatim}
+\end{small}
+
+\noindent Next one can build LLVM, MLIR, and the frontend by performing the following:
+
+\begin{small}
+\begin{verbatim}
+$ cd
+$ git clone -b main-042621 --single-branch \
+   https://github.com/wsmoses/Polygeist \
+   mlir-clang
+$ cd mlir-clang/
+$ mkdir build
+$ cd build/
+$ cmake -G Ninja ../llvm \
+ -DLLVM_ENABLE_PROJECTS="mlir;
+                         polly;clang;openmp" \
+ -DLLVM_BUILD_EXAMPLES=ON \
+ -DLLVM_TARGETS_TO_BUILD="host" \
+ -DCMAKE_BUILD_TYPE=Release \
+ -DLLVM_ENABLE_ASSERTIONS=ON  
+$ ninja
+\end{verbatim}
+\end{small}
+
+\noindent From here, we need to modify \verb|omp.h| by copying the version from the \verb|scripts| repository and replacing the version we just built.\footnote{We modify omp.h to prevent a compilation error for Pluto parallel. The generated code does not include stdint.h, thus getting the error: unknown type name 'intptr\_t'}
+
+\begin{small}
+\begin{verbatim}
+$ cd
+$ export OMP_FILE=`find \
+  $HOME/mlir-clang/build -iname omp.h`
+$ cp $HOME/scripts/omp.h $OMP_FILE
+\end{verbatim}
+\end{small}
+
+\noindent Let us now build the MLIR polyhedral analyses, along with the specific version of LLVM it requires. We shall begin by downloading the requisite code and building its dependencies.
+
+\begin{small}
+\begin{verbatim}
+$ cd
+$ git clone --recursive \
+  https://github.com/kumasento/polymer -b pact
+$ cd polymer/
+$ cd llvm/
+$ mkdir build
+$ cd build/
+$ cmake ../llvm \
+  -DLLVM_ENABLE_PROJECTS="llvm;clang;mlir" \
+  -DLLVM_TARGETS_TO_BUILD="host" \
+  -DLLVM_ENABLE_ASSERTIONS=ON \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DLLVM_INSTALL_UTILS=ON \
+  -G Ninja
+$ ninja -j`nproc`
+$ ninja check-mlir
+\end{verbatim}
+\end{small}
+
+\noindent We can now build the MLIR polyhedral analyses and export the corresponding build artifacts.
+
+\begin{small}
+\begin{verbatim}
+$ cd ~/polymer
+$ mkdir build
+$ cd build
+$ export BUILD=$PWD/../llvm/build
+$ cmake .. \
+  -DCMAKE_BUILD_TYPE=DEBUG \
+  -DMLIR_DIR=$BUILD/lib/cmake/mlir \
+  -DLLVM_DIR=$BUILD/lib/cmake/llvm \
+  -DLLVM_ENABLE_ASSERTIONS=ON \
+  -DLLVM_EXTERNAL_LIT=$BUILD/bin/llvm-lit \
+  -G Ninja
+$ ninja -j`nproc`
+$ export LD_LIBRARY_PATH= \
+    `pwd`/pluto/lib:$LD_LIBRARY_PATH
+$ ninja check-polymer
+\end{verbatim}
+\end{small}
+
+\noindent Finally, we are ready to begin benchmarking. We begin by running a script that disables turbo boost \& hyperthreading and remaining nonessential services on the machine. The script is specific to both the number of cores on the AWS instance (all cores except the non hyperthreaded cores on the first socket were disabled), as well as the image used (all nonessential services still present on the image were disabled) and thus may require modification if intending to be used on a different machine.
+
+\begin{small}
+\begin{verbatim}
+$ cd ~/scripts/
+$ sudo bash ./hyper.sh    
+\end{verbatim}
+\end{small}
+
+\noindent We can now run the benchmarking script. The script itself has assumptions about cores and layout (setting \verb`taskset -c 1-8 numactl -i all` for example). If using a different machine, these settings may need to be tweaked as appropriate.
+
+\begin{small}
+\begin{verbatim}
+cd ~/scripts/
+$ cd polybench-c-4.2.1-beta/
+$ ./run.sh
+# Output comes through stdout
+\end{verbatim}
+\end{small}
+
+\noindent The output of this script will contain the runtime of each trial, describing what compilation setting was used, as well as which benchmark was run.

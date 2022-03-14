@@ -1,0 +1,290 @@
+%%%
+%%% This file contains bits discarded from the main file, but potentially useful in the future.
+%%% We are reinventing version control... They would have been recoverable from git with proper version control.
+%%%
+
+Practically, MLIR defines an SSA-based~\cite{ssa} IR and provides algorithms and tools to analyze and transform it.
+Like many SSA representations, MLIR uses \emph{values} as a unit of data processed by the represented program.
+MLIR values cannot be redefined. \emph{Operations} describe the semantic of a program. Operations are a generalization of (machine) instructions or high-abstraction operations such as \texttt{matmul}, that use values and define new values.
+Operations are the primary mechanism for defining the semantics of the program.
+Values in MLIR have a \emph{type}, which contains the information known about the \emph{value} at compile time.
+Similarly, operation \emph{attributes} contain the additional information about the operation known at compile time.
+Operations are organized into linear sequences of (basic) \emph{blocks} that are executed sequentially.
+Blocks may accept values as arguments, following the functional SSA form~\cite{appel1998ssa} as opposed to the $\phi$-node form.
+\emph{Regions} contain groups of blocks.
+MLIR supports regions with classical control flow graph (CFG) structure where the control can flow from one block to one of its \emph{successors} and arbitrary graph regions that can have custom semantics such as TensorFlow graphs.
+We only consider CFG regions throughout this paper.
+Regions can be attached to an operation, which defines how the control flows into and from these regions, allowing the IR to be arbitrarily nested at multiple levels.
+
+%%%%%%%%%%%%%%%%%%%%%%
+
+Some operators within MLIR may not directly correspond to C and C++-level semantics. For example, high-level loop operators within MLIR do not permit the use of the \texttt{continue} construct. When this abstraction mismatch occurs, \tool emits wrapper code that enables the correct behavior. For example, \texttt{continue} is modeled by creating a new boolean that represents whether a continue statement has been executed and wrapping all loop statements within a conditional that checks whether one hit a \texttt{continue} (Figure \ref{fig:continue}).
+
+\begin{figure}
+    \centering
+\begin{tabular}{c}
+\begin{minipage}[t]{0.95\linewidth}
+\begin{minted}[fontsize=\small, escapeinside=||]{cpp}
+for (int i=0; i<N; ++i) {
+    A(i);
+    if (B(i))
+        continue;
+    C(i);
+}
+\end{minted}
+\end{minipage}\\
+\begin{minipage}[t]{0.95\linewidth}
+\begin{minted}[fontsize=\small, escapeinside=@@]{cpp}
+             @$\big\Downarrow$@
+bool seenContinue;
+for (int i=0; i<N; ++i) {
+    seenContinue = false;
+    if (!seenContinue)
+        A(i);
+    if (!seenContinue)
+        if (B(i))
+            seenContinue = true;
+    if (!seenContinue)
+        C(i);
+}
+\end{minted}
+\end{minipage} 
+\end{tabular}
+    \caption{Top: a C program that contains a continue statement. Bottom: a rewrite of the code above that eliminates the continue statement while preserving the original program's semantics. \tool performs such a transformation when lowering to MLIR (rather than emitting C) as MLIR's high-level loop constructs do not permit \texttt{continue}.}
+    \label{fig:continue}
+\end{figure}
+
+%===============WIP
+\begin{figure*}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=1\textwidth,
+    every axis plot post/.style={/pgf/number format/fixed},
+    ybar=1pt,
+    enlargelimits=0.028,
+    ylabel={time},
+    legend style={draw=none, fill=none},
+    bar width=2pt,
+    legend columns=20,
+    ymode=log,
+    log basis y={10},
+    ymin=0, ymax=100,
+    log origin=infty, % start from the bottom.
+    height=0.3\textwidth,
+    ymajorgrids=true,
+    grid style=dashed,
+    log ticks with fixed point,
+    axis x line*=bottom,
+    x tick label style={xshift=.4em,rotate=45,anchor=east},
+    ytick={1, 16, 128},
+    yminorticks=true,
+    legend style={at={(1,1.2)},anchor=north east},
+    xlabel={},
+    extra y ticks={1, 4, 16, 32, 64, 128}, % add extra tick
+    extra y tick labels={}, % do not print extra tick
+    symbolic x coords={gemm, gemver, gesummv, symm, syr2k, syrk, trmm, 2mm, 3mm, atax, bicg, doitgen, mvt},
+    xtick=data,
+]
+
+% clangsing    
+\addplot+ [orange3] coordinates {
+(gemm,8.35371)
+(gemver,0.159616)
+(gesummv,0.013066)
+(symm,53.8629)
+(syr2k,70.1443)
+(syrk,25.9289)
+(trmm,47.9134)
+(2mm,62.4948)
+(3mm,104.73)
+(atax,0.0068922)
+(bicg,0.0055652)
+(doitgen,5.01112)
+(mvt,0.143938)
+};
+
+% Clang
+\addplot+ [blind_safe_three_scheme_four_colors] coordinates {
+(gemm,8.46626)
+(gemver,0.158418)
+(gesummv,0.013282)
+(symm,53.7901)
+(syr2k,70.3723)
+(syrk,25.8021)
+(trmm,48.3674)
+(2mm,61.9698)
+(3mm,104.193)
+(atax,0.0067884)
+(bicg,0.0055274)
+(doitgen,4.91817)
+(mvt,0.143474) 
+};
+
+% mlir-clang
+\addplot+ [blind_safe_four_scheme_four_colors] coordinates {
+(gemm,6.94101)
+(gemver,0.159908)
+(gesummv,0.0133888)
+(symm,54.3839)
+(syr2k,71.7658)
+(syrk,25.9046)
+(trmm,48.2991)
+(2mm,62.0393)
+(3mm,105.27)
+(atax,0.0065358)
+(bicg,0.0056104)
+(doitgen,4.85439)
+(mvt,0.144069) 
+};
+
+% Polly 
+\addplot+ [blind_safe_one_scheme_four_colors] coordinates {
+(gemm,10.1609)
+(gemver,0.080229)
+(gesummv,0.0132624)
+(symm,53.7669)
+(syr2k,10.0732)
+(syrk,5.36067)
+(trmm,15.1114)
+(2mm,10.7852)
+(3mm,17.3721)
+(atax,0.0067856)
+(bicg,0.0043138)
+(doitgen,4.84958)
+(mvt,0.0500774) 
+};
+
+% Polly par
+\addplot+ [blind_safe_two_scheme_four_colors] coordinates {
+(gemm,1.33031)
+(gemver,0.0202084)
+(gesummv,0.0262504)
+(symm,53.6737)
+(syr2k,2.08874)
+(syrk,1.34801)
+(trmm,1.96776)
+(2mm,1.52907)
+(3mm,2.4513)
+(atax,0.0168894)
+(bicg,0.0092572)
+(doitgen,4.92501)
+(mvt,0.011839)
+};
+
+% Pluto
+\addplot+ [blind_safe_two_scheme_four_colors] coordinates {
+(gemm,4.59185)
+(gemver,0.100849)
+(gesummv,0.033856)
+(symm,53.7301)
+(syr2k,9.99791)
+(syrk,5.3404)
+(trmm,2.33019)
+(2mm,4.36668)
+(3mm,7.87485)
+(atax,0.0104202)
+(bicg,0.0093366)
+(doitgen,1.87225)
+(mvt,0.0834414)
+};
+
+% Pluto par
+\addplot+ [blind_safe_two_scheme_four_colors] coordinates {
+(gemm,0.6995)
+(gemver,0.0281192)
+(gesummv,0.0098276)
+(symm,53.8059)
+(syr2k,2.24339)
+(syrk,1.4506)
+(trmm,0.373893)
+(2mm,1.00752)
+(3mm,1.50406)
+(atax,0.0053492)
+(bicg,0.00517)
+(doitgen,1.66634)
+(mvt,0.0210356)
+};
+
+% Polymer
+\addplot+ [blind_safe_two_scheme_four_colors] coordinates {
+(gemm,3.70353)
+(gemver,0.0660196)
+(gesummv,0.033392)
+(symm,54.0499)
+(syr2k,9.41316)
+(syrk,6.06907)
+(trmm,1.77204)
+(2mm,3.13015)
+(3mm,6.64746)
+(atax,0.011067)
+(bicg,0.0116124)
+(doitgen,1.07443)
+(mvt,0.0805746)
+};
+
+% Polymer par 
+\addplot+ [blind_safe_two_scheme_four_colors] coordinates {
+(gemm,0.550249)
+(gemver,0.0231254)
+(gesummv,0.0091832)
+(symm,7.00879)
+(syr2k,2.06038)
+(syrk,1.35607)
+(trmm,0.267544)
+(2mm,0.843202)
+(3mm,1.24121)
+(atax,0.0040444)
+(bicg,0.0041572)
+(doitgen,1.79475)
+(mvt,0.0172978)
+};
+
+
+
+\legend{clangsing, Clang, mlir-clang, polly, pollypar, pluto, plutopar, polymer, polymerpar}
+\end{axis}
+\end{tikzpicture}
+\end{figure*}
+
+\iffalse
+\begin{figure}
+\centering
+\begin{tikzpicture}[auto, node distance=.51cm and 0.6cm]
+
+    \node [process] (clang1) {C Code};
+
+    \node [process, below= of clang1] (opt1) {Clang AST};
+
+    \node [process, below= of opt1] (enzyme1) {MLIR};
+
+    \node [process, below= of enzyme1] (popt1) {Raise Affine};
+
+    
+    \node [process, below= of popt1] (clang2) {Polyhedral};
+
+    \node [process, below= of clang2] (enzyme2) {Lower Affine};
+
+    \node [process, below= of enzyme2] (opt2) {Lower SCF};
+
+    \node [process, below= of opt2] (popt2) {Lower LLVM};
+
+    \node [process, below= of popt2] (cg2) {LLVM \icode{opt -O3}};
+
+    \node [process, below= of cg2] (cg1) {Binary};
+
+    \draw [->, line width=0.5mm] (clang1) -- node {} (opt1);
+    \draw [->, line width=0.5mm] (opt1) -- node {} (enzyme1);
+    \draw [->, line width=0.5mm] (enzyme1) -- node {} (popt1);
+    \draw [->, line width=0.5mm] (popt1) -- node {} (clang2);
+
+    \draw [->, line width=0.5mm] (clang2) -- node {} (enzyme2);
+    \draw [->, line width=0.5mm] (enzyme2) -- node {} (opt2);
+    \draw [->, line width=0.5mm] (opt2) -- node {} (popt2);
+    \draw [->, line width=0.5mm] (popt2) -- node {} (cg2);
+    \draw [->, line width=0.5mm] (cg2) -- node {} (cg1);
+  \end{tikzpicture}
+\caption{Pipeline}
+\label{fig:pipeline}
+\end{figure}
+\fi

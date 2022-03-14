@@ -1,0 +1,44 @@
+\begin{table}
+{
+%\caption{Geometric mean and standard deviation execution time of programs produced by \tool and Clang on Polybench EXTRALARGE double-precision single-thread. The rightmost column shows percent difference between Clang and \tool runtimes, with EXCL showing where a benchmark ran in below 0.05s.}
+\caption{GeoMean and StdDev of program runtime with \tool and Clang on Polybench}
+\label{table::clang_and_our_tool}
+
+\centering
+\footnotesize
+\begin{tabular}{p{1.1cm}rp{0.01cm}rrp{0.01cm}rr}
+    \toprule
+    Benchmark     & Clang &$\pm$&$\sigma$   & \tool &$\pm$&$\sigma$ & \%-diff  \\ \midrule\rowcolor{aluminium1}
+2mm&	63.191&$\pm$&	0.139&	62.117&$\pm$&	0.169 & 1.73\%\\
+3mm&	106.955&$\pm$&	0.261&	104.705&$\pm$&	0.087& 2.15\%\\\rowcolor{aluminium1}
+adi&	111.024&$\pm$&	0.215&	121.765&$\pm$&	0.203& -8.82\%\\
+atax&	0.007&$\pm$&	<0.001&	0.007&$\pm$&	<0.001& EXCL\\\rowcolor{aluminium1}
+bicg&	0.012&$\pm$&	<0.001&	0.006&$\pm$&	<0.001& EXCL\\
+cholesky&	15.591&$\pm$&	0.017&	15.578&$\pm$&	0.007& 0.09\%\\\rowcolor{aluminium1}
+correlation&	95.262&$\pm$&	0.020&	94.764&$\pm$&	0.065& 0.52\%\\
+covariance&	95.283&$\pm$&	0.016&	94.769&$\pm$&	0.068& 0.54\%\\\rowcolor{aluminium1}
+deriche&	1.686&$\pm$&	0.003&	1.669&$\pm$&	0.001& 1.03\%\\
+doitgen&	5.123&$\pm$&	0.012&	4.920&$\pm$&	0.005& 4.12\%\\\rowcolor{aluminium1}
+durbin&	0.017&$\pm$&	0.005&	0.015&$\pm$&	<0.001& EXCL\\
+fdtd-2d&	25.803&$\pm$&	0.039&	25.879&$\pm$&	0.060& -0.30\%\\\rowcolor{aluminium1}
+floyd-w.&	146.009&$\pm$&	0.061&	146.015&$\pm$&	0.052& 0.00\%\\
+gemm&	8.467&$\pm$&	0.013&	8.626&$\pm$&	0.011& -1.83\%\\\rowcolor{aluminium1}
+gemver&	0.160&$\pm$&	<0.001&	0.158&$\pm$&	<0.001& 1.27\%\\
+gesummv&	0.024&$\pm$&	<0.001&	0.014&$\pm$&	<0.001& EXCL\\\rowcolor{aluminium1}
+gramsch. &	152.444&$\pm$&	0.086&	152.254&$\pm$&	0.067& -0.12\%\\
+heat-3d&	33.022&$\pm$&	0.127&	32.964&$\pm$&	0.028& 0.17\%\\\rowcolor{aluminium1}
+jacobi-1d&	0.005&$\pm$&	0.002&	0.006&$\pm$&	0.002& EXCL\\
+jacobi-2d&	24.149&$\pm$&	0.050&	24.952&$\pm$&	0.019& -3.22\%\\\rowcolor{aluminium1}
+lu&	101.382&$\pm$&	0.386&	101.495&$\pm$&	0.388& -0.11\%\\
+ludcmp&	99.538&$\pm$&	0.546&	99.155&$\pm$&	0.671& 0.39\%\\\rowcolor{aluminium1}
+mvt&	0.146&$\pm$&	<0.001&	0.144&$\pm$&	<0.001& 1.27\%\\
+nussinov&	133.654&$\pm$&	0.288&	133.811&$\pm$&	0.094& -0.12\%\\\rowcolor{aluminium1}
+seidel-2d&	202.318&$\pm$&	0.015&	202.289&$\pm$&	0.001& 0.01\%\\
+symm&	55.253&$\pm$&	0.071&	54.214&$\pm$&	0.030& 1.92\%\\\rowcolor{aluminium1}
+syr2k&	70.523&$\pm$&	0.200&	70.359&$\pm$&	0.053& 0.23\%\\
+syrk&	25.982&$\pm$&	0.265&	25.993&$\pm$&	0.177& -0.04\%\\\rowcolor{aluminium1}
+trisolv&	0.012&$\pm$&	<0.001&	0.012&$\pm$&	<0.001& EXCL\\
+trmm&	47.946&$\pm$&	0.211&	47.941&$\pm$&	0.369& 0.01\%\\ \bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,0 +1,721 @@
+@article{feautrier2011polyhedron,
+  title={Polyhedron Model.},
+  author={Feautrier, Paul and Lengauer, Christian},
+  journal={Encyclopedia of parallel computing},
+  volume={3},
+  pages={1581--1591},
+  year={2011}
+}
+
+@online{polybench,
+  title={PolyBench/C 4.2.1},
+  author={Pouchet, Louis-No\"el and Yuki, Tomofumi},
+  url={https://sourceforge.net/projects/polybench/files/},
+}
+
+@article{grosser.ppl.2012,
+  title={Polly—performing polyhedral optimizations on a low-level intermediate representation},
+  author={Grosser, Tobias and Groesslinger, Armin and Lengauer, Christian},
+  journal={Parallel Processing Letters},
+  volume={22},
+  number={04},
+  pages={1250010},
+  year={2012},
+  publisher={World Scientific}
+}
+
+@article{Bondhugula2008Pluto,
+  title = {A {{Practical Automatic Polyhedral Parallelizer}} and {{Locality Optimizer}}},
+  volume = {43},
+  timestamp = {2017-04-19T08:23:23Z},
+  number = {6},
+  urldate = {2016-03-14},
+  journal = {ACM SIGPLAN Notices},
+  author = {Bondhugula, Uday and Hartono, Albert and Ramanujam, Jagannathan and Sadayappan, Ponnuswamy},
+  year = {2008},
+  pages = {101--113},
+}
+
+@misc{pocc,
+    title = {The Polyhedral Compiler Collection},
+    author = {PoCC},
+    url = {https://sourceforge.net/projects/pocc/},
+    accessed = {2020},
+    year = {2020},
+    note = "{Online; accessed on December 2020}"
+}
+
+@inproceedings{pet,
+  title={Polyhedral extraction tool},
+  author={Verdoolaege, Sven and Grosser, Tobias},
+  booktitle={Second International Workshop on Polyhedral Compilation Techniques (IMPACT’12), Paris, France},
+  volume={141},
+  year={2012}
+}
+
+@misc{bastoul2008clan,
+  title={Clan-a polyhedral representation extractor for high level programs},
+  author={Bastoul, C{\'e}dric},
+  year={2008},
+  publisher={May}
+}
+
+@inproceedings{pop2006graphite,
+  title={GRAPHITE: Polyhedral analyses and optimizations for GCC},
+  author={Pop, Sebastian and Cohen, Albert and Bastoul, C{\'e}dric and Girbal, Sylvain and Silber, Georges-Andr{\'e} and Vasilache, Nicolas},
+  booktitle={Proceedings of the 2006 GCC Developers Summit},
+  pages={2006},
+  year={2006},
+}
+
+@inproceedings{cloog,
+  title={Code generation in the polyhedral model is easier than you think},
+  author={Bastoul, Cedric},
+  booktitle={Proceedings. 13th International Conference on Parallel Architecture and Compilation Techniques, 2004. PACT 2004.},
+  pages={7--16},
+  year={2004},
+  organization={IEEE}
+}
+
+@article{ppcg,
+    author = {Verdoolaege, Sven and Juega, Juan Carlos and Cohen, Albert and
+		G\'{o}mez, Jos{\'e} Ignacio and Tenllado, Christian and
+		Catthoor, Francky},
+    title = {Polyhedral parallel code generation for CUDA},
+    journal = {ACM Trans. Archit. Code Optim.},
+    issue_date = {January 2013},
+    volume = {9},
+    number = {4},
+    month = jan,
+    year = {2013},
+    issn = {1544-3566},
+    pages = {54:1--54:23},
+    doi = {10.1145/2400682.2400713},
+    acmid = {2400713},
+    publisher = {ACM},
+    address = {New York, NY, USA},
+}
+
+@article{tactics,
+author = {Chelini, Lorenzo and Zinenko, Oleksandr and Grosser, Tobias and Corporaal, Henk},
+title = {Declarative Loop Tactics for Domain-Specific Optimization},
+year = {2019},
+issue_date = {January 2020},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {16},
+number = {4},
+issn = {1544-3566},
+url = {https://doi.org/10.1145/3372266},
+doi = {10.1145/3372266},
+abstract = {Increasingly complex hardware makes the design of effective compilers difficult. To reduce this problem, we introduce Declarative Loop Tactics, which is a novel framework of composable program transformations based on an internal tree-like program representation of a polyhedral compiler. The framework is based on a declarative C++ API built around easy-to-program matchers and builders, which provide the foundation to develop loop optimization strategies. Using our matchers and builders, we express computational patterns and core building blocks, such as loop tiling, fusion, and data-layout transformations, and compose them into algorithm-specific optimizations. Declarative Loop Tactics (Loop Tactics for short) can be applied to many domains. For two of them, stencils and linear algebra, we show how developers can express sophisticated domain-specific optimizations as a set of composable transformations or calls to optimized libraries. By allowing developers to add highly customized optimizations for a given computational pattern, we expect our approach to reduce the need for DSLs and to extend the range of optimizations that can be performed by a current general-purpose compiler.},
+journal = {ACM Trans. Archit. Code Optim.},
+month = dec,
+articleno = {55},
+numpages = {25},
+keywords = {declarative loop optimizations, Loop tactics, polyhedral model}
+}
+
+
+
+@inproceedings{razanajato2017splitting,
+  title={Splitting Polyhedra to Generate More Efficient Code},
+  author={Razanajato, Harenome and Loechner, Vincent and Bastoul, C{\'e}dric},
+  booktitle={International Workshop on Polyhedral Compilation Techniques (IMPACT), 2017.},
+  year={2017}
+}
+
+@article{grosser2015polyhedral,
+  title={Polyhedral {AST} generation is more than scanning polyhedra},
+  author={Grosser, Tobias and Verdoolaege, Sven and Cohen, Albert},
+  journal={ACM Transactions on Programming Languages and Systems (TOPLAS)},
+  volume={37},
+  number={4},
+  pages={1--50},
+  year={2015},
+  publisher={ACM New York, NY, USA}
+}
+
+@INPROCEEDINGS{mlir,
+  author={C. {Lattner} and M. {Amini} and U. {Bondhugula} and A. {Cohen} and A. {Davis} and J. {Pienaar} and R. {Riddle} and T. {Shpeisman} and N. {Vasilache} and O. {Zinenko}},
+  booktitle={2021 IEEE/ACM International Symposium on Code Generation and Optimization (CGO)}, 
+  title={{MLIR: Scaling Compiler Infrastructure for Domain Specific Computation}}, 
+  year={2021},
+  volume={},
+  number={},
+  pages={2-14},
+  doi={10.1109/CGO51591.2021.9370308}}
+
+@inproceedings{llvm,
+  title={{LLVM}: A compilation framework for lifelong program analysis \& transformation},
+  author={Lattner, Chris and Adve, Vikram},
+  booktitle={International Symposium on Code Generation and Optimization, 2004. CGO 2004.},
+  pages={75--86},
+  year={2004},
+  organization={IEEE}
+}
+
+@article{tc,
+  title={The next 700 accelerated layers: From mathematical expressions of network computation graphs to accelerated GPU kernels, automatically},
+  author={Vasilache, Nicolas and Zinenko, Oleksandr and Theodoridis, Theodoros and Goyal, Priya and Devito, Zachary and Moses, William S and Verdoolaege, Sven and Adams, Andrew and Cohen, Albert},
+  journal={ACM Transactions on Architecture and Code Optimization (TACO)},
+  volume={16},
+  number={4},
+  pages={1--26},
+  year={2019},
+  publisher={ACM New York, NY, USA}
+}
+
+% isn't there an impact pub ? no just the project. we did not write any paper on that. tc-cim is different.
+@online{teckyl,
+  author = {Andi Drebes},
+  title = {Teckyl: An {MLIR} frontend for Tensor Operations},
+  year = {2020},
+  url = {https://github.com/andidr/teckyl},
+  urldate = {2020-12-03}
+}
+
+@inproceedings{flang,
+  title={An {MLIR} dialect for high-level optimization of {Fortran}},
+  author={Eric Schweitz},
+  booktitle={2019 LLVM Developers Meeting},
+  year={2019}
+}
+
+@inproceedings{tc_cim,
+  title={{TC-CIM}: Empowering Tensor Comprehensions for Computing-In-Memory},
+  author={Drebes, Andi and Chelini, Lorenzo and Zinenko, Oleksandr and Cohen, Albert and Corporaal, Henk and Grosser, Tobias and Vadivel, Kanishkan and Vasilache, Nicolas},
+  booktitle={IMPACT 2020-10th International Workshop on Polyhedral Compilation Techniques},
+  year={2020}
+}
+
+@article{mullapudi2015polymage,
+  title={Polymage: Automatic optimization for image processing pipelines},
+  author={Mullapudi, Ravi Teja and Vasista, Vinay and Bondhugula, Uday},
+  journal={ACM SIGARCH Computer Architecture News},
+  volume={43},
+  number={1},
+  pages={429--443},
+  year={2015},
+  publisher={ACM New York, NY, USA}
+}
+
+@inproceedings{cerebras_chip,
+  title={Generating {SIMD} Instructions for Cerebras CS-1 using Polyhedral Compilation Techniques},
+  author={Verdoolaege, Sven and Kudlur,  Manjunath and Kamepalli, Harinath and Schreiber, Rob},
+    booktitle={IMPACT 2020-10th International Workshop on Polyhedral Compilation Techniques},
+  year={2020}
+}
+
+@inproceedings{isl,
+  title={isl: An integer set library for the polyhedral model},
+  author={Verdoolaege, Sven},
+  booktitle={International Congress on Mathematical Software},
+  pages={299--302},
+  year={2010},
+  organization={Springer}
+}
+
+@online{mlir_rationale,
+  author = {{MLIR Developers}},
+  title = {{MLIR} Rationale},
+  year = 2020,
+  url = {https://mlir.llvm.org/docs/Rationale/Rationale/}
+}
+
+@inproceedings{10.1145/2751205.2751248,
+author = {Grosser, Tobias and Ramanujam, J. and Pouchet, Louis-Noel and Sadayappan, P. and Pop, Sebastian},
+title = {Optimistic Delinearization of Parametrically Sized Arrays},
+year = {2015},
+isbn = {9781450335591},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2751205.2751248},
+doi = {10.1145/2751205.2751248},
+booktitle = {Proceedings of the 29th ACM on International Conference on Supercomputing},
+pages = {351–360},
+numpages = {10},
+keywords = {linear memory layout, multi-dimensional arrays, polyhedral analysis},
+location = {Newport Beach, California, USA},
+series = {ICS '15}
+}
+
+
+
+@inproceedings{komisarczyk2020pet,
+  title={{PET-to-MLIR}: A polyhedral front-end for MLIR},
+  author={Komisarczyk, Konrad and Chelini, Lorenzo and Vadivel, Kanishkan and Jordans, Roel and Corporaal, Henk},
+  booktitle={2020 23rd Euromicro Conference on Digital System Design (DSD)},
+  pages={551--556},
+  year={2020},
+  organization={IEEE}
+}
+
+@online{npcomp,
+    author = {npcomp developers},
+    title = {{MLIR} npcomp},
+    year = 2020,
+    url = {https://github.com/llvm/mlir-npcomp}
+}
+
+@inproceedings{comet,
+    author = {Erdal Mutlu and Ruiqin Tian and Bin Ren and Sriram Krishnamoorthy and Roberto Gioiosa and Jacques Pienaar and Gokcen Kestor},
+    title = {COMET: A Domain-Specific Compilation of High-Performance Computational Chemistry},
+    booktitle = {The 33rd Workshop on Languages and Compilers for Parallel Computing},
+    year = {2020},
+}
+
+@online{mlir_simplified_polyhedral,
+  author = {{MLIR} Developers},
+  title = {{MLIR: A Case for a Simplified Polyhedral Form}},
+  year = 2020,
+  url = {https://mlir.llvm.org/docs/Rationale/RationaleSimplifiedPolyhedralForm/}
+}
+
+@online{mlir_affine,
+  author = {{MLIR Developers}},
+  title = {{MLIR} Affine dialect},
+  year = 2020,
+  url = {https://mlir.llvm.org/docs/Dialects/Affine/}
+}
+
+@online{linalg,
+  author = {Vasilache, Nicolas and Zinenko, Oleksandr and Cohen, Albert},
+  title = {Linalg Dialect Rationale: The Case For Compiler-Friendly Custom Operations},
+  year = 2020,
+  url = {https://mlir.llvm.org/docs/Rationale/RationaleLinalgDialect/}
+}
+
+@misc{polylib,
+  title={{PolyLib}: A library for manipulating parameterized polyhedra},
+  author={Loechner, Vincent},
+  year={1999}
+}
+
+@inproceedings{tensorflow,
+  title={Tensorflow: A system for large-scale machine learning},
+  author={Abadi, Mart{\'\i}n and Barham, Paul and Chen, Jianmin and Chen, Zhifeng and Davis, Andy and Dean, Jeffrey and Devin, Matthieu and Ghemawat, Sanjay and Irving, Geoffrey and Isard, Michael and others},
+  booktitle={12th $\{$USENIX$\}$ symposium on operating systems design and implementation ({OSDI} 16)},
+  pages={265--283},
+  year={2016}
+}
+
+@online{tensorflow_mlir,
+  author = {TensorFlow Developers},
+  title = {{MLIR-HLO}: A Standalone "HLO" {MLIR}-based Compiler},
+  year = {2020},
+  url = {https://github.com/tensorflow/mlir-hlo}
+}
+
+@techreport{openscop,
+  title={Openscop: A specification and a library for data exchange in polyhedral compilation tools},
+  author={Bastoul, C{\'e}dric},
+  institution={Paris-Sud University},
+  volume={9},
+  year={2011}
+}
+
+@article{ssa,
+  title={Efficiently computing static single assignment form and the control dependence graph},
+  author={Cytron, Ron and Ferrante, Jeanne and Rosen, Barry K and Wegman, Mark N and Zadeck, F Kenneth},
+  journal={ACM Transactions on Programming Languages and Systems (TOPLAS)},
+  volume={13},
+  number={4},
+  pages={451--490},
+  year={1991},
+  publisher={ACM New York, NY, USA}
+}
+
+@article{appel1998ssa,
+  title={SSA is functional programming},
+  author={Appel, Andrew W},
+  journal={ACM SIGPLAN Notices},
+  volume={33},
+  number={4},
+  pages={17--20},
+  year={1998},
+  publisher={ACM New York, NY, USA}
+}
+
+@online{circt,
+  author = {{CIRCT Developers}},
+  title = {{CIRCT} Charter},
+  year = {2020},
+  url = {https://github.com/llvm/circt/blob/master/docs/Charter.md}
+}
+
+@inproceedings{yang2011finding,
+  title={Finding and understanding bugs in C compilers},
+  author={Yang, Xuejun and Chen, Yang and Eide, Eric and Regehr, John},
+  booktitle={Proceedings of the 32nd ACM SIGPLAN conference on Programming language design and implementation},
+  pages={283--294},
+  year={2011}
+}
+
+@inproceedings{delinearization,
+  title={Optimistic delinearization of parametrically sized arrays},
+  author={Grosser, Tobias and Ramanujam, Jagannathan and Pouchet, Louis-Noel and Sadayappan, Ponnuswamy and Pop, Sebastian},
+  booktitle={Proceedings of the 29th ACM on International Conference on Supercomputing},
+  pages={351--360},
+  year={2015}
+}
+
+@Inbook{rstream,
+author="Meister, Benoit
+and Vasilache, Nicolas
+and Wohlford, David
+and Baskaran, Muthu Manikandan
+and Leung, Allen
+and Lethin, Richard",
+editor="Padua, David",
+title="R-Stream Compiler",
+bookTitle="Encyclopedia of Parallel Computing",
+year="2011",
+publisher="Springer US",
+address="Boston, MA",
+pages="1756--1765",
+isbn="978-0-387-09766-4",
+doi="10.1007/978-0-387-09766-4\_515",
+url="https://doi.org/10.1007/978-0-387-09766-4\_515"
+}
+
+@INPROCEEDINGS{ibmxl_polyhedral,
+  author={U. {Bondhugula} and S. {Dash} and O. {Gunluk} and L. {Renganarayanan}},
+  booktitle={2010 19th International Conference on Parallel Architectures and Compilation Techniques (PACT)}, 
+  title={A model for fusion and code motion in an automatic parallelizing compiler}, 
+  year={2010},
+  pages={343-352},}
+  
+@inproceedings{pencil,
+  title={Pencil: A platform-neutral compute intermediate language for accelerator programming},
+  author={Baghdadi, Riyadh and Beaugnon, Ulysse and Cohen, Albert and Grosser, Tobias and Kruse, Michael and Reddy, Chandan and Verdoolaege, Sven and Betts, Adam and Donaldson, Alastair F and Ketema, Jeroen and others},
+  booktitle={2015 International Conference on Parallel Architecture and Compilation (PACT)},
+  pages={138--149},
+  year={2015},
+  organization={IEEE}
+}
+
+@inproceedings{verdoolaege2016live,
+  title={Live-range reordering},
+  author={Verdoolaege, Sven and Cohen, Albert},
+  booktitle={International Workshop on Polyhedral Compilation Techniques},
+  year={2016},
+}
+
+@inproceedings{schedule_trees,
+  title={Schedule trees},
+  author={Verdoolaege, Sven and Guelton, Serge and Grosser, Tobias and Cohen, Albert},
+  booktitle={International Workshop on Polyhedral Compilation Techniques},
+  year={2014}
+}
+
+@inproceedings{csmith,
+  title={Finding and understanding bugs in {C} compilers},
+  author={Yang, Xuejun and Chen, Yang and Eide, Eric and Regehr, John},
+  booktitle={Proceedings of the 32nd ACM SIGPLAN conference on Programming language design and implementation},
+  pages={283--294},
+  year={2011}
+}
+
+@inproceedings{delicm,
+  title={{DeLICM}: scalar dependence removal at zero memory cost},
+  author={Kruse, Michael and Grosser, Tobias},
+  booktitle={Proceedings of the 2018 International Symposium on Code Generation and Optimization},
+  pages={241--253},
+  year={2018}
+}
+
+@inproceedings{array_expansion,
+author = {Feautrier, Paul},
+title = {Array Expansion},
+year = {1988},
+isbn = {9781450328401},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+booktitle = {ACM International Conference on Supercomputing 25th Anniversary Volume},
+pages = {99–111},
+numpages = {13},
+location = {Munich, Germany}
+}
+
+@article{gareev_polly,
+author = {Gareev, Roman and Grosser, Tobias and Kruse, Michael},
+title = {High-Performance Generalized Tensor Operations: A Compiler-Oriented Approach},
+year = {2018},
+issue_date = {October 2018},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {15},
+number = {3},
+issn = {1544-3566},
+url = {https://doi.org/10.1145/3235029},
+doi = {10.1145/3235029},
+abstract = {The efficiency of tensor contraction is of great importance. Compilers cannot optimize it well enough to come close to the performance of expert-tuned implementations. All existing approaches that provide competitive performance require optimized external code. We introduce a compiler optimization that reaches the performance of optimized BLAS libraries without the need for an external implementation or automatic tuning. Our approach provides competitive performance across hardware architectures and can be generalized to deliver the same benefits for algebraic path problems. By making fast linear algebra kernels available to everyone, we expect productivity increases when optimized libraries are not available.},
+journal = {ACM Trans. Archit. Code Optim.},
+month = sep,
+articleno = {34},
+numpages = {27},
+keywords = {Tensor contractions, high-performance computing, matrix-matrix multiplication}
+}
+
+@inproceedings{larsen2017strategies,
+  title={Strategies for regular segmented reductions on {GPU}},
+  author={Larsen, Rasmus Wriedt and Henriksen, Troels},
+  booktitle={Proceedings of the 6th ACM SIGPLAN International Workshop on Functional High-Performance Computing},
+  pages={42--52},
+  year={2017}
+}
+
+@inproceedings{10.1145/318789.318810,
+author = {Jouvelot, Pierre and Dehbonei, Babak},
+title = {A Unified Semantic Approach for the Vectorization and Parallelization of Generalized Reductions},
+year = {1989},
+isbn = {0897913094},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/318789.318810},
+doi = {10.1145/318789.318810},
+abstract = {Generalized reductions include some of the most well known programming idioms, for instance loop invariant variables, induction variables and reduction operations. We propose a unified framework that allows the detection of these paradigms and thus the efficient parallel implementation of programs that use these otherwise parallel-inhibiting constructs. Moreover, using a semantic-based symbolic evaluator, this technique is able to detect parallelizable constructs inside standard benchmarks that no other vectorizer or parallelizer can currently handle. An interesting by-product of our approach is that correctness proofs can be based on the sound and powerful abstract interpretation theory. This method has been implemented in the Velour vectorizer under current development at the Bull Research Center.},
+booktitle = {Proceedings of the 3rd International Conference on Supercomputing},
+pages = {186–194},
+numpages = {9},
+keywords = {induction variable, parallelization, symbolic evaluation, reduction, vectorization},
+location = {Crete, Greece},
+series = {ICS '89}
+}
+
+
+
+@inproceedings{reduction_drawing,
+author = {Reddy, Chandan and Kruse, Michael and Cohen, Albert},
+title = {Reduction Drawing: Language Constructs and Polyhedral Compilation for Reductions on GPU},
+year = {2016},
+isbn = {9781450341219},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2967938.2967950},
+doi = {10.1145/2967938.2967950},
+booktitle = {Proceedings of the 2016 International Conference on Parallel Architectures and Compilation},
+pages = {87–97},
+numpages = {11},
+keywords = {polyhedral compilation, gpu optimizations, automatic parallelization, compiler transformations},
+location = {Haifa, Israel},
+series = {PACT '16}
+}
+
+@article{polly_reduction,
+  author    = {Johannes Doerfert and
+               Kevin Streit and
+               Sebastian Hack and
+               Zino Benaissa},
+  title     = {Polly's Polyhedral Scheduling in the Presence of Reductions},
+  journal   = {CoRR},
+  volume    = {abs/1505.07716},
+  year      = {2015},
+  url       = {http://arxiv.org/abs/1505.07716},
+  archivePrefix = {arXiv},
+  eprint    = {1505.07716},
+  timestamp = {Mon, 13 Aug 2018 16:49:02 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/DoerfertSHB15.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{mlir_raising,
+  title={Progressive Raising in Multi-level IR},
+  author={Chelini, Lorenzo and Drebes, Andi and Zinenko, Oleksandr and Cohen, Albert and Vasilache, Nicolas and Grosser, Tobias and Corporaal, Henk},
+  booktitle={2021 IEEE/ACM International Symposium on Code Generation and Optimization (CGO)},
+  pages={15--26},
+  year={2021},
+  organization={IEEE}
+}
+
+@inproceedings{polyast,
+  title={Oil and water can mix: An integration of polyhedral and ast-based transformations},
+  author={Shirako, Jun and Pouchet, Louis-No{\"e}l and Sarkar, Vivek},
+  booktitle={SC'14: Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis},
+  pages={287--298},
+  year={2014},
+  organization={IEEE}
+}
+
+@techreport{spatial_report,
+  TITLE = {{Unified Polyhedral Modeling of Temporal and Spatial Locality}},
+  AUTHOR = {Zinenko, Oleksandr and Verdoolaege, Sven and Reddy, Chandan and Shirako, Jun and Grosser, Tobias and Sarkar, Vivek and Cohen, Albert},
+  URL = {https://hal.inria.fr/hal-01628798},
+  TYPE = {Research Report},
+  NUMBER = {RR-9110},
+  PAGES = {41},
+  INSTITUTION = {{Inria Paris}},
+  YEAR = {2017},
+  MONTH = Nov,
+  KEYWORDS = {automatic parallelization ; polyhedral model ; loop nest optimization},
+  PDF = {https://hal.inria.fr/hal-01628798/file/RR-9110.pdf},
+  HAL_ID = {hal-01628798},
+  HAL_VERSION = {v1},
+}
+
+@inproceedings{spatial_scheduler,
+  title={Modeling the conflicting demands of parallelism and temporal/spatial locality in affine scheduling},
+  author={Zinenko, Oleksandr and Verdoolaege, Sven and Reddy, Chandan and Shirako, Jun and Grosser, Tobias and Sarkar, Vivek and Cohen, Albert},
+  booktitle={Proceedings of the 27th International Conference on Compiler Construction},
+  pages={3--13},
+  year={2018}
+}
+
+@article{stripe,
+  author    = {Tim Zerrell and
+               Jeremy Bruestle},
+  title     = {Stripe: Tensor Compilation via the Nested Polyhedral Model},
+  journal   = {CoRR},
+  volume    = {abs/1903.06498},
+  year      = {2019},
+  url       = {http://arxiv.org/abs/1903.06498},
+  archivePrefix = {arXiv},
+  eprint    = {1903.06498},
+  timestamp = {Mon, 01 Apr 2019 14:07:37 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-1903-06498.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{clay,
+  title={Opening polyhedral compiler's black box},
+  author={Bagn{\`e}res, L{\'e}na{\"\i}c and Zinenko, Oleksandr and Huot, St{\'e}phane and Bastoul, C{\'e}dric},
+  booktitle={Proceedings of the 2016 International Symposium on Code Generation and Optimization},
+  pages={128--138},
+  year={2016}
+}
+
+@article{uruk,
+  title={Semi-automatic composition of loop transformations for deep parallelism and memory hierarchies},
+  author={Girbal, Sylvain and Vasilache, Nicolas and Bastoul, C{\'e}dric and Cohen, Albert and Parello, David and Sigler, Marc and Temam, Olivier},
+  journal={International Journal of Parallel Programming},
+  volume={34},
+  number={3},
+  pages={261--317},
+  year={2006},
+  publisher={Springer}
+}
+
+@techreport{chill,
+  title={CHiLL: A framework for composing high-level loop transformations},
+  author={Chen, Chun and Chame, Jacqueline and Hall, Mary},
+  year={2008},
+  institution={Citeseer}
+}
+
+@inproceedings{zhang2016combining,
+  title={Combining Polyhedral and AST Transformations in CHiLL},
+  author={Zhang, Huihui and Venkat, Anand and Basu, Protonu and Hall, Mary},
+  booktitle={Proceedings of the Sixth International Workshop on Polyhedral Compilation Techniques, IMPACT},
+  volume={16},
+  year={2016}
+}
+
+@article{gpu_transpose,
+author = {Sung, I-Jui and G\'{o}mez-Luna, Juan and Gonz\'{a}lez-Linares, Jos\'{e} Mar\'{\i}a and Guil, Nicol\'{a}s and Hwu, Wen-Mei W.},
+title = {In-Place Transposition of Rectangular Matrices on Accelerators},
+year = {2014},
+issue_date = {August 2014},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {49},
+number = {8},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/2692916.2555266},
+doi = {10.1145/2692916.2555266},
+journal = {SIGPLAN Notices},
+month = feb,
+pages = {207–218},
+numpages = {12},
+keywords = {GPU, transposition, in-place}
+}
+
+@inproceedings{eisenbeis1992general,
+author = {Eisenbeis, Christine and Sogno, Jean-Claude},
+title = {A General Algorithm for Data Dependence Analysis},
+year = {1992},
+isbn = {0897914856},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/143369.143422},
+doi = {10.1145/143369.143422},
+booktitle = {Proceedings of the 6th International Conference on Supercomputing},
+pages = {292–302},
+numpages = {11},
+location = {Washington, D. C., USA},
+series = {ICS '92}
+}
+
+@article{feautrier1991dataflow,
+  title={Dataflow analysis of array and scalar references},
+  author={Feautrier, Paul},
+  journal={International Journal of Parallel Programming},
+  volume={20},
+  number={1},
+  pages={23--53},
+  year={1991},
+  publisher={Springer}
+}
+
+@article{quinlan2000rose,
+  title={ROSE: Compiler support for object-oriented frameworks},
+  author={Quinlan, Dan},
+  journal={Parallel processing letters},
+  volume={10},
+  number={02n03},
+  pages={215--226},
+  year={2000},
+  publisher={World Scientific}
+}
+
+@inproceedings{chatarasi2018unified,
+  title={A Unified Approach to Variable Renaming for Enhanced Vectorization},
+  author={Chatarasi, Prasanth and Shirako, Jun and Cohen, Albert and Sarkar, Vivek},
+  booktitle={International Workshop on Languages and Compilers for Parallel Computing},
+  pages={1--20},
+  year={2018},
+  organization={Springer}
+}
+
+@article{wilson1994suif,
+  title={SUIF: An infrastructure for research on parallelizing and optimizing compilers},
+  author={Wilson, Robert P and French, Robert S and Wilson, Christopher S and Amarasinghe, Saman P and Anderson, Jennifer M and Tjiang, Steve WK and Liao, Shih-Wei and Tseng, Chau-Wen and Hall, Mary W and Lam, Monica S and others},
+  journal={ACM Sigplan Notices},
+  volume={29},
+  number={12},
+  pages={31--37},
+  year={1994},
+  publisher={ACM New York, NY, USA}
+}
+
+@article{hall1996maximizing,
+  title={Maximizing multiprocessor performance with the SUIF compiler},
+  author={Hall, Mary W and Anderson, Jennifer M and Amarasinghe, Saman P. and Murphy, Brian R and Liao, Shih-Wei and Bugnion, Edouard and Lam, Monica S},
+  journal={Computer},
+  volume={29},
+  number={12},
+  pages={84--89},
+  year={1996},
+  publisher={IEEE}
+}
+
+@article{holloway2002machine,
+  title={The machine-SUIF static single assignment library},
+  author={Holloway, Glenn},
+  journal={Division of Engineering and Applied Sciences, Harvard University},
+  year={2002}
+}
+
+@inproceedings{amini2011pips,
+  title={Pips is not (just) polyhedral software},
+  author={Amini, Mehdi and Ancourt, Corinne and Coelho, Fabien and Irigoin, Fran{\c{c}}ois and Jouvelot, Pierre and Keryell, Ronan and Villalon, Pierre and Creusillet, B{\'e}atrice and Guelton, Serge},
+  booktitle={International Workshop on Polyhedral Compilation Techniques (IMPACT’11), Chamonix, France},
+  year={2011}
+}
+
+@inproceedings{amini2012par4all,
+  title={Par4all: From convex array regions to heterogeneous computing},
+  author={Amini, Mehdi and Creusillet, B{\'e}atrice and Even, St{\'e}phanie and Keryell, Ronan and Goubier, Onig and Guelton, Serge and McMahon, Janice Onanian and Pasquier, Fran{\c{c}}ois-Xavier and P{\'e}an, Gr{\'e}goire and Villalon, Pierre and others},
+  booktitle={2nd International Workshop on Polyhedral Compilation Techniques, IMPACT (Jan 2012)},
+  year={2012},
+}

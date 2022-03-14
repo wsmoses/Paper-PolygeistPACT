@@ -1,0 +1,164 @@
+\section{An (Affine) MLIR Compilation Pipeline}
+
+The \tool pipeline consists of 4 components (Figure~\ref{fig:pipeline}):
+\begin{enumerate}
+    %\item a frontend that allows entering MLIR at the SCF + Affine loops level from C or C++ code (Section~\ref{sec:frontsub});
+    \item a frontend that allows entering MLIR at the SCF loops level from C or C++ code (Section~\ref{sec:frontsub});
+    %\item a preprocessing step within MLIR that raises the non-loop operations to the Affine dialect (Section~\ref{sec:raising});
+    \item a preprocessing step within MLIR that raises to the Affine dialect (Section~\ref{sec:raising});
+    \item a polyhedral scheduler of the Affine parts of the program \textit{via} a round-trip to and from OpenSCoP (Section~\ref{sec:polyhedral_tools}) and running Pluto transformations, controlled by the new statement splitting heuristic (Section~\ref{sec:stmt_splitting});
+    \item a backend that runs postprocessing MLIR optimizations (section~\ref{sec:opts}) and final lowering to an executable.
+\end{enumerate}
+
+\subsection{Frontend}
+\label{sec:frontsub}
+\tool builds off the Clang compiler to emit MLIR, directly analyzing Clang's AST. \tool thus avoids reimplementing parsing and language-level semantic analysis and handles modern C and C++ features. As is typical for compiler frontends, \tool creates a recursive symbol table data structure to look up the correct variable for a given scope. \tool lazily registers all global variables and functions found in the AST to its symbol table before generating any code. \tool then traverses the call graph from a given entry function (\texttt{main} by default), creating and defining MLIR functions as necessary.
+%\wmnote{AST from entry function is incorrect, the call graph is the correct term. The reason is that we basically create a queue funcctions we need to emit starting from main, hence call graph. just AST implies we emit all which is not true (as we lazily emit).}
+\subheading{Control Flow \& High Level Information}
+
+In contrast to traditional compiler pipelines, targeting a branch-based IR, \tool leverages the high-level MLIR operations such as \texttt{scf.while} (a looping construct) and \texttt{scf.if} (a conditional construct) within the SCF dialect to preserve the control flow structure of the source code. C-level \icode{continue} and \icode{break} constructs are handled by introducing signal
+variables and checking them before each operation that follows original constructs. Furthermore, within a \texttt{\#pragma scop}, \tool assumes that the program is affine and uses an \texttt{affine.for} to represent loops directly.
+%\az{I removed the \icode{continue} example. While nice, it is useless for the benchmarks we discuss. Replaced that with one sentence that says we can handle break/continue.}\wmnote{Yeah that's fine. The one thing that we may want to use is another example of how we may have to add special handling (that thus especially needs additional preprocessing optimizations such as mem2reg/if merging}
+
+% Preserving this in comment if parts needed in future
+% Some operators within MLIR may not directly correspond to C and C++-level semantics. For example, high-level loop operators within MLIR do not permit the use of the \texttt{continue} construct. When this abstraction mismatch occurs, \tool emits wrapper code that enables the correct behavior. For example, \texttt{continue} is modeled by creating a new boolean that represents whether a continue statement has been executed and wrapping all loop statements within a conditional that checks whether one hit a \texttt{continue} (Figure \ref{fig:continue}).
+
+% \begin{figure}
+%     \centering
+% \begin{tabular}{c}
+% \begin{minipage}[t]{0.95\linewidth}
+% \begin{minted}[fontsize=\small, escapeinside=||]{cpp}
+% for (int i=0; i<N; ++i) {
+%     A(i);
+%     if (B(i))
+%         continue;
+%     C(i);
+% }
+% \end{minted}
+% \end{minipage}\\
+% \begin{minipage}[t]{0.95\linewidth}
+% \begin{minted}[fontsize=\small, escapeinside=@@]{cpp}
+%              @$\big\Downarrow$@
+% bool seenContinue;
+% for (int i=0; i<N; ++i) {
+%     seenContinue = false;
+%     if (!seenContinue)
+%         A(i);
+%     if (!seenContinue)
+%         if (B(i))
+%             seenContinue = true;
+%     if (!seenContinue)
+%         C(i);
+% }
+% \end{minted}
+% \end{minipage} 
+% \end{tabular}
+%     \caption{Top: a C program that contains a continue statement. Bottom: a rewrite of the code above that eliminates the continue statement while preserving the original program's semantics. \tool performs such a transformation when lowering to MLIR (rather than emitting C) as MLIR's high-level loop constructs do not permit \texttt{continue}.}
+%     \label{fig:continue}
+% \end{figure}
+
+\begin{figure}
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  {\tt
+  \begin{tabular}{lll}
+  \toprule
+  {\rm\bf C type} & {\rm\bf LLVM IR type} & {\rm\bf MLIR type} \\
+  \midrule
+  int & i32 (on machine X) & i32 (on machine X) \\
+  intNN\_t & iNN & iNN \\
+  uintNN\_t & iNN & uiNN \\
+  float & float & f32 \\
+  double & double & f64 \\
+  ty * & ty * & memref<?\,x\,ty> \\
+  ty \& & ty * & memref<1\,x\,ty> \\
+  ty ** & ty ** & memref<memref<?\,x\,ty>\ \!\!\!> \\
+  ty[N][M] & [N x [M x ty]]* & memref<N\,x\,M\,x\,ty> \\
+  \bottomrule
+  \end{tabular}
+  }
+  }
+  \caption{Type correspondence between C, LLVM IR and MLIR types.}
+  \label{fig:types}
+\end{figure}
+
+\subheading{Types \& \tool ABI}
+While emitting operations, \tool must decide how to represent C or C++ types within MLIR. For primitive types such as \texttt{int} or \texttt{float}, \tool emits an MLIR variant of that type with the same width as would be used within LLVM/Clang. This allows \tool to keep the same ABI as code compiled by a normal C or C++ compiler when calling a function with only primitive types. On the other hand, for pointer, reference and array types, \tool uses \memref type (Figure~\ref{fig:types}). This allows \tool to preserve more of the structure available within the original program (e.g., multi-dimensional arrays) and enables interaction with MLIR's high-level memory operations.
+
+This diverges from the C ABI for any functions with pointer arguments and wouldn't interface correctly with C functions. \tool addresses this by providing an attribute for function arguments and allocations to use a C-compatible pointer type rather than \memref, applied by default to external functions such as \texttt{strcmp} and \texttt{scanf}. When calling a pointer-ABI function with a \texttt{memref}-ABI argument, \tool generates wrapper code that recovers the C ABI-compatible pointer from \memref and ensures the correct result.
+% When a function with C-compatible ABI is called with a \memref argument, \tool extracts the raw pointer and passes it to the function call, which is made possible by only considering contiguous row-major {\memref}s.
+%\wmnote{The extract row-major is not accurate. For functions like scanf we actually make a temporary llvm pointer buffer, then load result of buffer and store into memref}
+Figure~\ref{fig:abi} shows an example demonstrating how the \tool and C ABI may interact for a small program.
+
+%To ease programmers' burden from having to specify an %ABI attribute on code not compiled by \tool, we %automatically apply the pointer ABI attribute to C %library functions and \texttt{main}. %Figure~\ref{fig:abi} shows an example demonstrating how %the \tool and C ABI may interact for a small program.
+
+When allocating and deallocating memory, this difference in ABI becomes significant. This is because allocating several bytes of an array with \icode{malloc} then casting to a \memref will not result in legal code (as \memref itself may not be implemented with a raw pointer). Thus, \tool identifies calls to allocation and deallocation functions and replaces them with legal equivalents for \memref. 
+
+Functions and global variables are emitted using the same name used by the C or C++ ABI. This ensures that all external values are loaded correctly, and multi-versioned functions (such as those generated by \texttt{C++} templates or overloading) have distinct names and definitions.
+
+\subheading{Instruction Generation}
+For most instructions, \tool directly emits an MLIR operation corresponding to the equivalent C operation (\icode{addi} for integer add, \icode{call} for function call, etc.).  For some special instructions such as a call to \texttt{pow}, \tool chooses to emit a specific MLIR operation in the Math dialect, instead of a call to an external function (defined in libm). This permits such instructions to be better analyzed and optimized within MLIR.
+
+Operations that involve memory or pointer arithmetic require additional handling. MLIR does not have a generic pointer arithmetic instruction; instead, it requires that \texttt{load} and \texttt{store} operations contain all of the indices being looked up. This presents issues for operations that perform pointer arithmetic. To remedy this, we introduce a temporary \texttt{subindex} operation for \memref's keeps track of the additional address offsets. A subsequent optimization pass within \tool, forwards the offsets in a \texttt{subindex} to any \texttt{load} or \texttt{store} which uses them.
+% \az{I changed this to say \icode{subindex} is a temp operation, it doesn't matter if we proposed it or not IMO.}
+% sgtm
+
+\subheading{Local Variables}
+Local variables are handled by allocating a \memref on stack at the top of a function. This permits the desired semantics of C or C++ to be implemented with relative ease. However, as many local variables and arguments contain \memref types, this immediately results in a \memref of a \memref---a hindrance for most MLIR optimizations as it is illegal outside of \tool. As a remedy, we implement a heavyweight memory-to-register (mem2reg) transformation pass that eliminates unnecessary loads, stores, and allocations within MLIR constructs. Empirically this eliminates all {\memref}s of \memref in the Polybench suite.
+
+
+\subsection{Raising to Affine}\label{sec:raising}
+
+The translation from C or C++ to MLIR directly preserves high-level information about loop structure and n-D arrays, but does not generate other Affine operations. \tool subsequently raises memory, conditional, and looping operations into their Affine dialect counterparts if it can prove them to be legal affine operations. If the corresponding frontend code was enclosed within \texttt{\#pragma scop}, \tool assumes it is always legal to raise all operations within that region without additional checks.\footnote{All kernels within Polybench are successfully raised to Affine with or without the use of \texttt{\#pragma scop}.} Any operations which are not proven or assumed to be affine remain untouched. We perform simplifications on affine maps to remove loops with zero or one iteration and drop branches of a conditional with a condition known at compile time.
+
+\subheading{Memory operations and loop bounds}
+To convert an operation, \tool replaces its bound and subscript operands with identity affine maps (\icode{affine\_map<() [s0]->(s0)>[\%bound]}). It then folds the operations computing the map operands, e.g., \icode{addi}, \icode{muli}, into the map itself. Values that are transitively derived from loop induction variables become map dimensions and other values become symbols. For example, \icode{affine\_map<\ ()[s0]->(s0)>[\%bound]} with \icode{\%bound = addi \%N, \%i}, where \icode{\%i} is an induction variable, is folded into \icode{affine\_map<(d0)[s0] ->(s0 + d0)>(\%i)[\%N]}. The process terminates when no operations can be folded or when Affine value categorization rules are satisfied.
+
+\subheading{Conditionals}
+Conditional operations are emitted by the frontend for two input code patterns: \icode{if} conditions and ternary expressions. The condition is transformed by introducing an integer set and by folding the operands into it similarly to the affine maps, with in addition \icode{and} operations separating set constraints and \icode{not} operations inverting them (\icode{affine.if} only accepts $\geq 0$ and $=0$ constraints). \tool processes nested conditionals with C-style short-circuit semantics, in which the subsequent conditions are checked within the body of the preceding conditionals, by hoisting conditions outside the outermost conditional when legal and replacing them with a boolean operation or a \icode{select}. This is always legal within \icode{\#pragma scop}.
+
+Conditionals emitted for ternary expressions often involve memory loads in their regions, which prevent hoisting due to side effects. We reuse our mem2reg pass to replace those to equivalent earlier loads when possible to enable hoisting. Empirically, this is sufficient to process all ternary expressions in the Polybench/C suite~\cite{polybench}. Otherwise, ternary expressions would need to be packed into a single statement by the downstream polyhedral pass.
+
+\begin{figure}
+    \centering
+    {\scriptsize
+\begin{lstlisting}[language=c]
+void setArray(int N, double val, double* array) {...}
+int main(int argc, char** argv) {
+  ...
+  cmp = strcmp(str1, str2)
+  ...
+  double array[10];
+  setArray(10, 42.0, array)
+}
+\end{lstlisting}}
+\vspace{-0.5cm}
+$\Downarrow$
+{\scriptsize
+\begin{lstlisting}[language=llvm, escapeinside=&&]
+func @setArray(%N: i32, %val: f64,
+               %array: memref<?xf64>) {
+  %0 = &\color{black}{\tt index\_cast}& %N : i32 to index
+  affine.for %i = 0 to %0 {
+    affine.store %val, %array[%i] : memref<?xf64>
+  }
+  return
+}
+
+func @main(%argc: i32,
+           %argv: !llvm.ptr<ptr<i8>>) -> i32 {
+  ...
+  %cmp = llvm.call @strcmp(%str1, %str2) :
+           (!llvm.ptr<i8>, !llvm.ptr<i8>) -> !llvm.i32
+  ...
+  %array = memref.alloca() : memref<10xf64>
+  %arraycst = memref.cast %array : memref<10xf64> to 
+    memref<?xf64>
+  %val = constant 42.0 : f64
+  call @setArray(%N, %val, %arraycst) :
+           (i32, f64, memref<?xf64>) -> ()
+}
+\end{lstlisting}}
+    \caption{Example demonstrating \tool ABI. For functions expected to be compiled with \tool such as \icode{setArray}, pointer arguments are replaced with \memref's. For functions that require external calling conventions (such as \icode{main}/\icode{strcmp}), \tool falls back to emitting \icode{llvm.ptr} and generates conversion code.}
+    \label{fig:abi}
+\end{figure}

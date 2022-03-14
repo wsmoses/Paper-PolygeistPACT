@@ -1,0 +1,76 @@
+\subsection{Post-Transformations and Backend}\label{sec:opts}
+
+\tool allows one to operate on both quasi-syntactic and SSA level, enabling analyses and optimizations that are extremely difficult, if not impossible, to perform at either level in isolation. In addition to statement splitting, we propose two techniques that demonstrate the potential of \tool.% for designing such optimizations.
+
+\subheading{Transforming Loops with Carried Values (Reductions)}
+
+\tool leverages MLIR's first-class support for loop-carried values to detect, express and transform reduction-like loops. This support does not require source code annotations, unlike source-level tools~\cite{reduction_drawing} that use annotations to enable detection, nor complex modifications for parallel code emission, unlike Polly~\cite{polly_reduction}, which suffers from LLVM missing first-class parallel constructs. We do not modify the polyhedral scheduler either, relying on post-processing for reduction parallelization, including outermost parallel reduction loops.
+
+The overall approach follows the definition proposed in~\cite{10.1145/318789.318810} with adaptations to MLIR's region-based IR, and is illustrated in Figure~\ref{fig:red}. \tool identifies memory locations modified on each iteration, i.e. \icode{load}/\icode{store} pairs with loop-invariant subscripts and no interleaving aliasing \icode{store}s, by scanning the single-block body of the loop. These are transformed into \emph{loop-carried values} or secondary induction variables, with the \icode{load}/\icode{store} pair lifted out of the loop and repurposed for reading the initial and storing the final value. Loop-carried values may be updated by a chain of side effect-free operations in the loop body. If this chain is known to be associative and commutative, the loop is a \emph{reduction}. Loop-carried values are detected even in absence of reduction-compatible operations. Loops with such values contribute to mem2reg, decreasing memory footprint, but are not subject to parallelization.
+
+\begin{figure}
+\centering
+\begin{tabular}{l@{$\Rightarrow$}l}
+{\scriptsize
+\begin{lstlisting}[language=llvm]
+affine.for %i = ... {
+  // Reduction into r1[0]
+  %1 = affine.load %r1[0]
+  %5 = addi %1, %2
+  affine.store %5, %r1[0]
+  // Loop-dependent load
+  %10 = affine.load %r2[%i]
+  %15 = addi %10, %2
+  // Inteleaving store
+  %20 = affine.load %r2[0]
+  affine.store %21, %r2[0]
+  %25 = addi %20, %2
+  // May have side effects
+  %30 = affine.load %r3[0]
+  call @f(%30, %2)
+}
+\end{lstlisting}
+}&{
+\scriptsize
+\begin{lstlisting}[language=llvm]
+%init = affine.load %r1[0]
+%red = affine.for %i = ...
+ iter_args(%arg = %init) {
+  // Reduction accumulation
+  %5 = addi %arg, %2
+  // Loop-dependent load
+  %10 = affine.load %r2[%i]
+  %15 = addi %10, %2
+  // Inteleaving store
+  %20 = affine.load %r2[0]
+  affine.store %21, %r2[0]
+  %25 = addi %20, %2
+  // May have side effects
+  %30 = affine.load %r3[0]
+  call @f(%30, %2)
+  // Yield accumulated 
+  affine.yield %5
+}
+affine.store %red, %r1[0]
+\end{lstlisting}
+}
+\end{tabular}
+\caption{\tool detects memory locations accessed in all loop iterations, e.g. reduction accumulators such as \icode{\%r1[0]} and transforms them to loop-carried values (secondary induction variables), except when computed with side-effects, interleaved stores or  by non-associative/commutative operations.}
+\label{fig:red}
+\end{figure}
+
+
+%\caption{\tool detect and manipulate reductions at the Affine level. Output of the reduction pass for a simple sequential array sum computation.}
+
+
+%\az{I'm not sure Fig.~\ref{fig:red} brings something interesting to the paper.}
+
+\subheading{Late Parallelization}\label{sec:parallelization}
+Rather than relying on the dependence distance information obtained by the affine scheduler, \tool performs a separate polyhedral analysis to detect loop parallelism in the generated code. The analysis itself is a classical polyhedral dependence analysis~\cite{feautrier1991dataflow,eisenbeis1992general} implemented on top of MLIR region structure. Performing it after SSA-based optimizations, in particular mem2reg and reduction detection, allows parallelizing more loops. In particular, reduction loops and loops with variables whose value is only relevant within a single iteration similar to live-range reordering~\cite{verdoolaege2016live} but without expensive additional polyhedral analyses (live-range of an SSA value defined in a loop never extends beyond the loop).
+
+%\subheading{Final Code Generation}
+%After all subsequent MLIR optimizations, \tool emits LLVM IR suitable for the Clang/LLVM compiler. This can be used to emit a final binary or link to existing \tool or C ABI-compiled program.
+%\lc{This takes space and not to important imo}
+
+% generates affine MLIR by parsing Clang's Abstract Syntax Tree and progressively proving raising  Figure~\ref{fig:pipeline} shows an overview of \tool. Starting from a code fragment expressed using C or C++, \tool traverses the Clang AST and for each visited node emits the corresponding MLIR SCF or Standard dialect construct. 
+% At SCF level, \tool exposes a raising pass which allows lifting Standard load, store, as well as SCF ``for'' loops and ``if'' conditions to the Affine dialect. At the Affine level, code is optimized and lowered back to SCF, which in turn, gets lowered to LLVM IR for code generation. Finally, \icode{Clang} takes LLVM IR and emits binary code, to be executed on the target platform.
